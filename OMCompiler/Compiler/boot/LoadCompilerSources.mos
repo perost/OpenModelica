@@ -194,6 +194,7 @@ if true then /* Suppress output */
     "../Util/HashTableSM1.mo",
     "../Util/HashTableStringToPath.mo",
     "../Util/HashTableStringToProgram.mo",
+    "../Util/Interval.mo",
     "../Util/IOStreamExt.mo",
     "../Util/IOStream.mo",
     "../Util/Lapack.mo",

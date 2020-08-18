@@ -1669,5 +1669,23 @@ external "C" result = referenceCompareExt(ref1, ref2) annotation(Include="
 ");
 end referenceCompare;
 
+function gcd
+  "Returns the greatest common divisor of two integers."
+  input Integer a;
+  input Integer b;
+  output Integer res;
+algorithm
+  res := if b == 0 then a else gcd(b, intMod(a, b));
+end gcd;
+
+function lcm
+  "Returns the least common multiplier of two integers."
+  input Integer a;
+  input Integer b;
+  output Integer res;
+algorithm
+  res := if a < 0 or b < 0 then -1 else intDiv((a * b), gcd(a, b));
+end lcm;
+
 annotation(__OpenModelica_Interface="util");
 end Util;
