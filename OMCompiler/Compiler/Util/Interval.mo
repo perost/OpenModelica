@@ -5,6 +5,41 @@ protected
   import Util;
   import MetaModelica.Dangerous.listReverseInPlace;
 
+  function euclid
+    "uses the extended euclidean algorithm to compute
+     - greatest common divisor d = gcd(a,b)
+     - least common multiple m = lcm(a,b) = a*(b/d)
+     - Bézout coefficients ua + vb = u*a + v*b = d
+    "
+    input Integer a;
+    input Integer b;
+    output Integer d "gcd";
+    output Integer m "lcm";
+    output Integer ua;
+    output Integer vb;
+  protected
+    Integer q;
+    Integer r1 = a, r2 = b;
+    Integer s1 = a, s2 = 0;
+    Integer tmp;
+  algorithm
+    while r2 <> 0 loop
+      q := div(r1, r2);
+
+      tmp := r2;
+      r2 := r1 - q * r2;
+      r1 := tmp;
+
+      tmp := s2;
+      s2 := s1 - q * s2;
+      s1 := tmp;
+    end while;
+    d := r1;
+    m := abs(s2);
+    ua := s1;
+    vb := r1 - s1;
+  end euclid;
+
 public
   record INTERVAL
     Integer start;
@@ -52,55 +87,36 @@ public
     input Interval int2;
     output Interval int;
   protected
-    Integer start1, start2;
-    Integer new_step, new_stop;
-    Integer search_start, search_stop;
+    Integer new_start, new_step, new_stop;
+    Integer gcd_, ua, vb, x;
   algorithm
     if int1.stop < int2.start or int2.stop < int1.start then
       // The intervals do not intersect.
       int := INTERVAL(0, 0, 0);
     else
-      // The new step will be the least common multiplier of the two intervals' steps.
-      new_step := Util.lcm(int1.step, int2.step);
-      new_stop := min(int1.stop, int2.stop);
-      start1 := int1.start;
-      start2 := int2.start;
+      // The new step will be the least common multiple of the two intervals' steps.
+      (gcd_, new_step, ua, vb) := euclid(int1.step, int2.step);
 
-      // Try to find the smallest value common to both intervals to use as the
-      // start of the intersection.
-      if start1 <> start2 then
-        // The new start must be within both old intervals, so step the smaller
-        // start value forward until it's within the other interval.
-        if start1 < start2 then
-          start1 := start1 + int1.step * intDiv((start2 - start1), int1.step);
-        else
-          start2 := start2 + int2.step * intDiv((start1 - start2), int2.step);
-        end if;
+      if 0 <> mod(int1.start - int2.start, gcd_) then
+        // The intervals step through each other without touching
+        int := INTERVAL(0, 0, 0);
+      else
+        // x is an integer on both intervals (modulo new_step)
+        x := div(int1.start, gcd_) * vb + div(int2.start, gcd_) * ua + mod(int1.start, gcd_);
 
-        // The start of the intersection must be within one new step and before
-        // the end of either interval.
-        search_stop := min(new_stop, min(start1, start2) + new_step - 1);
+        // Find new start and stop, crop with x
+        new_start := max(int1.start, int2.start);
+        new_stop := min(int1.stop, int2.stop);
+        new_start := new_start + mod(x - new_start, new_step);
+        new_stop := new_stop - mod(new_stop - x, new_step);
 
-        // Step the start values forward one step at a time until they're equal
-        // or we reach the end of the range of possible start values.
-        while start1 < search_stop and start2 < search_stop loop
-          if start1 == start2 then
-            break;
-          elseif start1 < start2 then
-            start1 := start1 + int1.step;
-          else
-            start2 := start2 + int2.step;
-          end if;
-        end while;
-
-        // Couldn't find a new start value, the intervals do not intersect.
-        if start1 <> start2 then
+        if new_stop < new_start then
           // Empty interval
           int := INTERVAL(0, 0, 0);
+        else
+          int := INTERVAL(new_start, new_step, new_stop);
         end if;
       end if;
-
-      int := create(start1, new_step, min(int1.stop, int2.stop));
     end if;
   end intersect;
 
