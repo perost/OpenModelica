@@ -126,41 +126,40 @@ public
     input Interval int2;
     output list<Interval> ints = {};
   protected
-    Interval i1, i2, itmp;
-    Integer count;
+    Interval i1, i2;
+    Integer count_r, count_s;
   algorithm
-    i1 := crop(int1);
+    i1 := crop(int1); // is this necessary?
     i2 := intersect(i1, int2);
 
     if isEmpty(i2) then
       // No intersection, nothing to remove.
       ints := {i1};
     else
-      count := 0;
+      // Rightmost interval.
+      if i2.stop < i1.stop then
+        ints := INTERVAL(i2.stop + i1.step, i1.step, i1.stop) :: ints;
+      end if;
+
+      count_r := div(i2.step, i1.step) - 1;
+      count_s := div(i2.stop - i2.start, i2.step);
+
+      if count_r < count_s then
+        // create an interval for every residue class not equal to i2.start
+        for i in count_r:-1:1 loop
+          ints := INTERVAL(i2.start + i * i1.step, i2.step, i2.stop - i2.step + i * i1.step) :: ints;
+        end for;
+      else
+        // create an interval for every space between removed points
+        for i in count_s:-1:1 loop
+          ints := INTERVAL(i2.start + i1.step + (i - 1) * i2.step, i1.step, i2.start - i1.step + i * i2.step) :: ints;
+        end for;
+      end if;
 
       // Leftmost interval.
       if i2.start > i1.start then
-        itmp := create(i1.start, 1, i2.start - 1);
-        ints := intersect(i1, itmp) :: ints;
+        ints := INTERVAL(i1.start, i1.step, i2.start - i1.step) :: ints;
       end if;
-
-      if i2.stop - i2.start > i2.step then
-        count := intDiv(i2.step, i1.step) - 1;
-      else
-        count := 0;
-      end if;
-
-      for i in 1:count loop
-        ints := create(i2.start + i * i1.step, i2.step, i2.stop) :: ints;
-      end for;
-
-      // Rightmost interval.
-      if i2.stop < i1.stop then
-        itmp := create(i2.stop + 1, 1, i1.stop);
-        ints := intersect(i1, itmp) :: ints;
-      end if;
-
-      ints := listReverseInPlace(ints);
     end if;
   end remove;
 
