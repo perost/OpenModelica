@@ -5,14 +5,6 @@ protected
   import Util;
   import MetaModelica.Dangerous.listReverseInPlace;
 
-  function myRem
-    input Integer x;
-    input Integer y;
-    output Integer z;
-  algorithm
-    z := x - (div(x, y) * y);
-  end myRem;
-
 public
   record INTERVAL
     Integer start;
@@ -51,7 +43,7 @@ public
     input output Interval int;
   algorithm
     if int.stop < System.intMaxLit() then
-      int.stop := int.stop - myRem(int.stop - int.start, int.step);
+      int.stop := int.stop - mod(int.stop - int.start, int.step);
     end if;
   end crop;
 
@@ -216,7 +208,7 @@ public
     res := not isEmpty(int) and
            c >= int.start and
            c <= int.stop and
-           myRem(c - int.start, int.step) == 0;
+           mod(c - int.start, int.step) == 0;
   end contains;
 
   function isEmpty

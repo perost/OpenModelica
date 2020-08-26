@@ -725,6 +725,25 @@ algorithm
   end if;
 end appendList;
 
+function join<T>
+  "Returns a new array consisting of the elements from both the given arrays."
+  input array<T> arr1;
+  input array<T> arr2;
+  output array<T> outArray;
+protected
+  Integer len1 = arrayLength(arr1), len2 = arrayLength(arr2);
+algorithm
+  if len1 == 0 then
+    outArray := arrayCopy(arr2);
+  elseif len2 == 0 then
+    outArray := arrayCopy(arr1);
+  else
+    outArray := arrayCreateNoInit(len1 + len2, arr1[1]);
+    copyRange(arr1, outArray, 1, len1, 1);
+    copyRange(arr2, outArray, 1, len2, len1 + 1);
+  end if;
+end join;
+
 function copy<T>
   "Copies all values from inArraySrc to inArrayDest. Fails if inArraySrc is
    larger than inArrayDest.
