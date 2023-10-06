@@ -1333,5 +1333,22 @@ Waits for input, useful for e.g. pausing the compiler in order to turn valgrind 
 </html>"));
 end waitForInput;
 
+function intListSort
+  input list<Integer> lst;
+  input Boolean reverse = false;
+  output list<Integer> outList;
+  external "C" outList=SystemImpl__intListSort(lst, reverse) annotation(Library = "omcruntime", Documentation(info="<html>
+Sorts a list of Integers using std::sort.
+</html>"));
+end intListSort;
+
+function intListUnique
+  input list<Integer> lst;
+  output list<Integer> outList;
+  external "C" outList=SystemImpl__intListUnique(lst) annotation(Library = "omcruntime", Documentation(info="<html>
+Removes duplicates from a sorted list of Integers using std::unique.
+</html>"));
+end intListUnique;
+
 annotation(__OpenModelica_Interface="util");
 end System;

@@ -57,6 +57,7 @@ protected
   import BackendUtil = NBBackendUtil;
   import Slice = NBSlice;
   import UnorderedSet;
+  import System;
 
 public
   function indexReduction
@@ -118,7 +119,7 @@ public
   algorithm
     if not listEmpty(marked_eqns_lst) then
       changed := true;
-      marked_eqns := List.unique(List.flatten(marked_eqns_lst));
+      marked_eqns := System.intListUnique(List.flatten(marked_eqns_lst));
       // --------------------------------------------------------
       //      1. BASIC INDEX REDUCTION
       // --------------------------------------------------------

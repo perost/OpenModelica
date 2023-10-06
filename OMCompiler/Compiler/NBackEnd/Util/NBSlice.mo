@@ -56,6 +56,7 @@ protected
   // Util imports
   import List;
   import UnorderedMap;
+  import System;
 
 public
   type IntLst = list<Integer>;
@@ -332,7 +333,7 @@ public
 
     // sort
     for i in 1:arrayLength(indices) loop
-      indices[i] := List.sort(List.unique(indices[i]), intLt);
+      indices[i] := System.intListUnique(System.intListSort(indices[i], reverse = true));
     end for;
   end getDependentCrefIndicesPseudoArray;
 

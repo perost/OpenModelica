@@ -19,6 +19,9 @@
 #include <map>
 #endif
 
+#include <algorithm>
+#include <vector>
+
 using namespace std;
 
 void FindAndReplace( std::string& tInput, std::string tFind, std::string tReplace )
@@ -130,4 +133,48 @@ double SystemImpl__getSizeOfData(void *data, double *raw_size_res, double *nonsh
   return sz;
 }
 
+void* SystemImpl__intListSort(void *lst, int reverse)
+{
+  std::vector<mmc_sint_t> v;
+  v.reserve(listLength(lst));
+
+  while (!MMC_NILTEST(lst)) {
+    v.emplace_back(MMC_UNTAGFIXNUM(MMC_CAR(lst)));
+    lst = MMC_CDR(lst);
+  }
+
+  if (reverse) {
+    std::sort(v.begin(), v.end(), [] (mmc_sint_t x, mmc_sint_t y) { return x > y; });
+  } else {
+    std::sort(v.begin(), v.end());
+  }
+
+  void* res  = mmc_mk_nil();
+  for (auto e: v) {
+    res = mmc_mk_cons(mmc_mk_icon(e), res);
+  }
+
+  return res;
 }
+
+void* SystemImpl__intListUnique(void *lst)
+{
+  std::vector<mmc_sint_t> v;
+  v.reserve(listLength(lst));
+
+  while (!MMC_NILTEST(lst)) {
+    v.emplace_back(MMC_UNTAGFIXNUM(MMC_CAR(lst)));
+    lst = MMC_CDR(lst);
+  }
+
+  auto last = std::unique(v.begin(), v.end());
+
+  void* res  = mmc_mk_nil();
+  for (auto it = v.begin(); it != last; ++it) {
+    res = mmc_mk_cons(mmc_mk_icon(*it), res);
+  }
+
+  return res;
+}
+}
+
