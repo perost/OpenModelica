@@ -1023,6 +1023,15 @@ algorithm
     case (Expression.STRING(), Expression.STRING())
       then Expression.STRING(exp1.value + exp2.value);
 
+    case (Expression.STRING(), Expression.FILENAME())
+      then Expression.STRING(exp1.value + exp2.filename);
+
+    case (Expression.FILENAME(), Expression.STRING())
+      then Expression.STRING(exp1.filename + exp2.value);
+
+    case (Expression.FILENAME(), Expression.FILENAME())
+      then Expression.STRING(exp1.filename + exp2.filename);
+
     case (Expression.ARRAY(), Expression.ARRAY())
       guard arrayLength(exp1.elements) == arrayLength(exp2.elements)
       then Expression.makeArray(exp1.ty,
@@ -1619,6 +1628,12 @@ algorithm
       then exp1.value < exp2.value;
     case (Expression.STRING(), Expression.STRING())
       then stringCompare(exp1.value, exp2.value) < 0;
+    case (Expression.STRING(), Expression.FILENAME())
+      then stringCompare(exp1.value, exp2.filename) < 0;
+    case (Expression.FILENAME(), Expression.STRING())
+      then stringCompare(exp1.filename, exp2.value) < 0;
+    case (Expression.FILENAME(), Expression.FILENAME())
+      then stringCompare(exp1.filename, exp2.filename) < 0;
     case (Expression.ENUM_LITERAL(), Expression.ENUM_LITERAL())
       then exp1.index < exp2.index;
 
@@ -1645,6 +1660,12 @@ algorithm
       then exp1.value <= exp2.value;
     case (Expression.STRING(), Expression.STRING())
       then stringCompare(exp1.value, exp2.value) <= 0;
+    case (Expression.STRING(), Expression.FILENAME())
+      then stringCompare(exp1.value, exp2.filename) <= 0;
+    case (Expression.FILENAME(), Expression.STRING())
+      then stringCompare(exp1.filename, exp2.value) <= 0;
+    case (Expression.FILENAME(), Expression.FILENAME())
+      then stringCompare(exp1.filename, exp2.filename) <= 0;
     case (Expression.ENUM_LITERAL(), Expression.ENUM_LITERAL())
       then exp1.index <= exp2.index;
 
@@ -1671,6 +1692,12 @@ algorithm
       then exp1.value > exp2.value;
     case (Expression.STRING(), Expression.STRING())
       then stringCompare(exp1.value, exp2.value) > 0;
+    case (Expression.STRING(), Expression.FILENAME())
+      then stringCompare(exp1.value, exp2.filename) > 0;
+    case (Expression.FILENAME(), Expression.STRING())
+      then stringCompare(exp1.filename, exp2.value) > 0;
+    case (Expression.FILENAME(), Expression.FILENAME())
+      then stringCompare(exp1.filename, exp2.filename) > 0;
     case (Expression.ENUM_LITERAL(), Expression.ENUM_LITERAL())
       then exp1.index > exp2.index;
 
@@ -1697,6 +1724,12 @@ algorithm
       then exp1.value >= exp2.value;
     case (Expression.STRING(), Expression.STRING())
       then stringCompare(exp1.value, exp2.value) >= 0;
+    case (Expression.STRING(), Expression.FILENAME())
+      then stringCompare(exp1.value, exp2.filename) >= 0;
+    case (Expression.FILENAME(), Expression.STRING())
+      then stringCompare(exp1.filename, exp2.value) >= 0;
+    case (Expression.FILENAME(), Expression.FILENAME())
+      then stringCompare(exp1.filename, exp2.filename) >= 0;
     case (Expression.ENUM_LITERAL(), Expression.ENUM_LITERAL())
       then exp1.index >= exp2.index;
 
@@ -1723,6 +1756,12 @@ algorithm
       then exp1.value == exp2.value;
     case (Expression.STRING(), Expression.STRING())
       then stringCompare(exp1.value, exp2.value) == 0;
+    case (Expression.STRING(), Expression.FILENAME())
+      then stringCompare(exp1.value, exp2.filename) == 0;
+    case (Expression.FILENAME(), Expression.STRING())
+      then stringCompare(exp1.filename, exp2.value) == 0;
+    case (Expression.FILENAME(), Expression.FILENAME())
+      then stringCompare(exp1.filename, exp2.filename) == 0;
     case (Expression.ENUM_LITERAL(), Expression.ENUM_LITERAL())
       then exp1.index == exp2.index;
 
@@ -1749,6 +1788,12 @@ algorithm
       then exp1.value <> exp2.value;
     case (Expression.STRING(), Expression.STRING())
       then stringCompare(exp1.value, exp2.value) <> 0;
+    case (Expression.STRING(), Expression.FILENAME())
+      then stringCompare(exp1.value, exp2.filename) <> 0;
+    case (Expression.FILENAME(), Expression.STRING())
+      then stringCompare(exp1.filename, exp2.value) <> 0;
+    case (Expression.FILENAME(), Expression.FILENAME())
+      then stringCompare(exp1.filename, exp2.filename) <> 0;
     case (Expression.ENUM_LITERAL(), Expression.ENUM_LITERAL())
       then exp1.index <> exp2.index;
 
@@ -1937,7 +1982,7 @@ algorithm
     case "transpose" then evalBuiltinTranspose(listHead(args));
     case "vector" then evalBuiltinVector(listHead(args));
     case "zeros" then evalBuiltinZeros(args);
-    case "OpenModelica_uriToFilename" then evalUriToFilename(fn, args, target);
+    case "OpenModelica_uriToFilename" then evalUriToFilename(fn, listHead(args), target);
     case "intBitAnd" then evalIntBitAnd(args);
     case "intBitOr" then evalIntBitOr(args);
     case "intBitXor" then evalIntBitXor(args);
@@ -2906,25 +2951,13 @@ end evalBuiltinZeros;
 
 function evalUriToFilename
   input Function fn;
-  input list<Expression> args;
+  input Expression arg;
   input EvalTarget target;
   output Expression result;
-protected
-  Expression e, arg;
-  String s;
-  Function f;
 algorithm
-  arg := listHead(args);
   result := match arg
     case Expression.STRING()
-      algorithm
-        s := OpenModelica.Scripting.uriToFilename(arg.value);
-        e := Expression.STRING(s);
-        if Flags.getConfigBool(Flags.BUILDING_FMU) then
-          f := Function.setName(Absyn.IDENT("OpenModelica_fmuLoadResource"), fn);
-          e := Expression.CALL(Call.makeTypedCall(f, {e}, Variability.PARAMETER, Purity.IMPURE, Expression.typeOf(e)));
-        end if;
-      then e;
+      then Expression.FILENAME(OpenModelica.Scripting.uriToFilename(arg.value));
 
     else algorithm printWrongArgsError(getInstanceName(), {arg}, sourceInfo()); then fail();
   end match;

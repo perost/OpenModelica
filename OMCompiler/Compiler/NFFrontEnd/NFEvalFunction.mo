@@ -1393,8 +1393,10 @@ protected
   Expression marg;
   FFI.ArgSpec arg_spec;
   Integer args_len, i = 1;
+  list<Expression> input_args;
 algorithm
-  arg_map := createArgumentMap(fn.inputs, fn.outputs, fn.locals, inputArgs,
+  input_args := list(makeExternalArg(arg) for arg in inputArgs);
+  arg_map := createArgumentMap(fn.inputs, fn.outputs, fn.locals, input_args,
     mutableParams = false, buildArrayBinding = false);
 
   args_len := listLength(extArgs);
@@ -1408,6 +1410,16 @@ algorithm
     i := i + 1;
   end for;
 end mapExternalArgs;
+
+function makeExternalArg
+  input Expression arg;
+  output Expression extArg;
+algorithm
+  extArg := match arg
+    case Expression.FILENAME() then Expression.STRING(arg.filename);
+    else arg;
+  end match;
+end makeExternalArg;
 
 function mapExternalArg
   input Expression extArg;
