@@ -18,6 +18,20 @@ constexpr int NODE_TYPE_INDEX = 6;
 
 extern record_description NFInstNode_CachedData_NO__CACHE__desc;
 
+MMSharedCache<Class> ClassNode::_cache;
+
+ClassNode::ClassNode(MetaModelica::Record value)
+  : _name{value[NAME_INDEX].toString()},
+    _definition{nullptr},
+    _visibility{value[VISIBILITY_INDEX]},
+    // _cls is initialized by initialize()
+    _parentScope{InstNode::getReference(value[PARENT_SCOPE_INDEX])},
+    // _nodeType is initialized by initialize()
+    _mmCache{value}
+{
+
+}
+
 ClassNode::ClassNode(Absyn::Class *cls, InstNode *parent)
   : ClassNode(cls, parent, std::make_unique<NormalClassType>())
 {
@@ -34,7 +48,30 @@ ClassNode::ClassNode(Absyn::Class *cls, InstNode *parent, std::unique_ptr<InstNo
 
 }
 
+ClassNode::ClassNode(std::string name, Absyn::Class *definition, Visibility visibility,
+  std::unique_ptr<Class> cls, InstNode *parentScope, std::unique_ptr<InstNodeType> nodeType)
+  : _name{name},
+    _definition{definition},
+    _visibility{visibility},
+    _cls{std::move(cls)},
+    _parentScope{parentScope},
+    _nodeType{std::move(nodeType)}
+{
+
+}
+
 ClassNode::~ClassNode() = default;
+
+std::unique_ptr<InstNode> ClassNode::clone() const
+{
+  return std::make_unique<ClassNode>(_name, _definition, _visibility, _cls ? _cls->clone() : nullptr,
+    _parentScope, _nodeType ? _nodeType->clone() : nullptr);
+}
+
+const Absyn::Element* ClassNode::definition() const noexcept
+{
+  return _definition;
+}
 
 const InstNodeType* ClassNode::nodeType() const noexcept
 {
@@ -45,6 +82,21 @@ void ClassNode::setNodeType(std::unique_ptr<InstNodeType> nodeType) noexcept
 {
   _nodeType = std::move(nodeType);
   _mmCache.reset();
+}
+
+void ClassNode::setParent(InstNode *parent) noexcept
+{
+  _parentScope = parent;
+}
+
+const Class* ClassNode::getClass() const noexcept
+{
+  return _cls.get();
+}
+
+Class* ClassNode::getClass() noexcept
+{
+  return _cls.get();
 }
 
 void ClassNode::partialInst()
@@ -94,4 +146,13 @@ MetaModelica::Value ClassNode::toMetaModelica() const
   }
 
   return *_mmCache;
+}
+
+void ClassNode::initialize()
+{
+  if (_mmCache) {
+    auto value = *_mmCache;
+    _cls = _cache.getOwnedPtr(value[CLS_INDEX].toPointer().access());
+    _nodeType = InstNodeType::fromNF(value[NODE_TYPE_INDEX]);
+  }
 }

@@ -21,20 +21,10 @@ Path::Path(std::vector<std::string> path, bool fullyQualified)
   assert(!_names.empty());
 }
 
-Path::Path(std::string_view path)
+Path::Path(std::string name, bool fullyQualified)
+  : _names{std::move(name)}, _fullyQualified{fullyQualified}
 {
-  if (!path.empty() && path[0] == '.') {
-    _fullyQualified = true;
-    path.remove_prefix(1);
-  }
 
-  while (!path.empty()) {
-    auto pos = path.find('.', 0);
-    _names.emplace_back(path.substr(0, pos));
-    path.remove_prefix(pos == path.npos ? path.size() : pos + 1);
-  }
-
-  assert(!_names.empty());
 }
 
 Path::Path(MetaModelica::Record value)
@@ -52,6 +42,25 @@ Path::Path(MetaModelica::Record value)
   }
 
   _names.push_back(v[0].toString());
+}
+
+Path Path::parseString(std::string_view path)
+{
+  std::vector<std::string> names;
+  bool fully_qualified = false;
+
+  if (!path.empty() && path[0] == '.') {
+    fully_qualified = true;
+    path.remove_prefix(1);
+  }
+
+  while (!path.empty()) {
+    auto pos = path.find('.', 0);
+    names.emplace_back(path.substr(0, pos));
+    path.remove_prefix(pos == path.npos ? path.size() : pos + 1);
+  }
+
+  return {std::move(names), fully_qualified};
 }
 
 MetaModelica::Value Path::toAbsyn() const noexcept
@@ -128,14 +137,14 @@ Path Path::unqualify() const noexcept
   return {_names, false};
 }
 
-std::string Path::str() const noexcept
+std::string Path::str() const
 {
   std::ostringstream ss;
   ss << *this;
   return ss.str();
 }
 
-std::ostream& OpenModelica::operator<< (std::ostream &os, const Path &path) noexcept
+std::ostream& OpenModelica::operator<< (std::ostream &os, const Path &path)
 {
   if (path._fullyQualified) os << '.';
   os << Util::printList(path._names, ".");

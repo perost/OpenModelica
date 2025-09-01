@@ -16,8 +16,10 @@ namespace OpenModelica
   {
     public:
       Path(std::vector<std::string> path, bool fullyQualified = false);
-      Path(std::string_view path);
+      Path(std::string name, bool fullyQualified = false);
       Path(MetaModelica::Record value);
+
+      static Path parseString(std::string_view path);
 
       MetaModelica::Value toAbsyn() const noexcept;
 
@@ -37,16 +39,16 @@ namespace OpenModelica
       Path fullyQualify() const noexcept;
       Path unqualify() const noexcept;
 
-      std::string str() const noexcept;
+      std::string str() const;
 
-      friend std::ostream& operator<< (std::ostream &os, const Path &path) noexcept;
+      friend std::ostream& operator<< (std::ostream &os, const Path &path);
 
     private:
       std::vector<std::string> _names;
       bool _fullyQualified = false;
   };
 
-  std::ostream& operator<< (std::ostream &os, const Path &path) noexcept;
+  std::ostream& operator<< (std::ostream &os, const Path &path);
 }
 
 #endif /* PATH_H */

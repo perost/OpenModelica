@@ -3,6 +3,7 @@
 
 #include <bitset>
 #include <iosfwd>
+#include <string>
 
 #include "MetaModelica.h"
 #include "Prefixes.h"

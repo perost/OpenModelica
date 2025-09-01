@@ -31,7 +31,8 @@ namespace OpenModelica::Absyn
       bool isFullyQualified() const noexcept;
       bool isWild() const noexcept;
 
-      const Part& first() const;
+      const Part& front() const;
+      const Part& back() const;
       ComponentRef rest() const;
       ComponentRef fullyQualify() const noexcept;
       ComponentRef unqualify() const noexcept;

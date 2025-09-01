@@ -45,9 +45,28 @@ extern record_description UnorderedMap_UNORDERED__MAP__desc;
 //  return nullptr;
 //}
 
+std::unique_ptr<InstNodeType> InstNodeType::fromNF(MetaModelica::Record value)
+{
+  switch (value.index()) {
+    case ROOT_CLASS: return std::make_unique<RootClassType>(value);
+  }
+
+  return nullptr;
+}
+
+std::unique_ptr<InstNodeType> NormalClassType::clone() const
+{
+  return std::make_unique<NormalClassType>(*this);
+}
+
 MetaModelica::Value NormalClassType::toMetaModelica() const
 {
   return MetaModelica::Record(NORMAL_CLASS, NFInstNode_InstNodeType_NORMAL__CLASS__desc, {});
+}
+
+std::unique_ptr<InstNodeType> BaseClassType::clone() const
+{
+  return std::make_unique<BaseClassType>(*this);
 }
 
 bool BaseClassType::isBuiltin() const
@@ -68,11 +87,21 @@ MetaModelica::Value BaseClassType::toMetaModelica() const
   });
 }
 
+std::unique_ptr<InstNodeType> DerivedClassType::clone() const
+{
+  return std::make_unique<DerivedClassType>(_ty->clone());
+}
+
 MetaModelica::Value DerivedClassType::toMetaModelica() const
 {
   return MetaModelica::Record(DERIVED_CLASS, NFInstNode_InstNodeType_DERIVED__CLASS__desc, {
     _ty->toMetaModelica()
   });
+}
+
+std::unique_ptr<InstNodeType> BuiltinClassType::clone() const
+{
+  return std::make_unique<BuiltinClassType>(*this);
 }
 
 MetaModelica::Value BuiltinClassType::toMetaModelica() const
@@ -86,12 +115,28 @@ TopScopeType::TopScopeType(std::unique_ptr<InstNode> annotationScope)
 
 }
 
+std::unique_ptr<InstNodeType> TopScopeType::clone() const
+{
+  return std::make_unique<TopScopeType>(_annotationScope->clone());
+}
+
 MetaModelica::Value TopScopeType::toMetaModelica() const
 {
   return MetaModelica::Record(TOP_SCOPE, NFInstNode_InstNodeType_TOP__SCOPE__desc, {
     _annotationScope->toMetaModelica(),
     MetaModelica::UnorderedMap<MetaModelica::Value, MetaModelica::Value>(boxvar_stringHashDjb2, boxvar_stringEq)
   });
+}
+
+RootClassType::RootClassType(MetaModelica::Record value)
+  : _parent{InstNode::getReference(value[0])}
+{
+
+}
+
+std::unique_ptr<InstNodeType> RootClassType::clone() const
+{
+  return std::make_unique<RootClassType>(*this);
 }
 
 MetaModelica::Value RootClassType::toMetaModelica() const
@@ -101,9 +146,19 @@ MetaModelica::Value RootClassType::toMetaModelica() const
   });
 }
 
+std::unique_ptr<InstNodeType> NormalComponentType::clone() const
+{
+  return std::make_unique<NormalComponentType>(*this);
+}
+
 MetaModelica::Value NormalComponentType::toMetaModelica() const
 {
   return MetaModelica::Record(NORMAL_COMP, NFInstNode_InstNodeType_NORMAL__COMP__desc, {});
+}
+
+std::unique_ptr<InstNodeType> RedeclaredComponentType::clone() const
+{
+  return std::make_unique<RedeclaredComponentType>(*this);
 }
 
 MetaModelica::Value RedeclaredComponentType::toMetaModelica() const
@@ -113,6 +168,11 @@ MetaModelica::Value RedeclaredComponentType::toMetaModelica() const
   });
 }
 
+std::unique_ptr<InstNodeType> RedeclaredClassType::clone() const
+{
+  return std::make_unique<RedeclaredClassType>(_parent, _ty->clone());
+}
+
 MetaModelica::Value RedeclaredClassType::toMetaModelica() const
 {
   return MetaModelica::Record(REDECLARED_CLASS, NFInstNode_InstNodeType_REDECLARED__CLASS__desc, {
@@ -120,9 +180,19 @@ MetaModelica::Value RedeclaredClassType::toMetaModelica() const
   });
 }
 
+std::unique_ptr<InstNodeType> GeneratedInnerType::clone() const
+{
+  return std::make_unique<GeneratedInnerType>(*this);
+}
+
 MetaModelica::Value GeneratedInnerType::toMetaModelica() const
 {
   return MetaModelica::Record(GENERATED_INNER, NFInstNode_InstNodeType_GENERATED__INNER__desc, {});
+}
+
+std::unique_ptr<InstNodeType> ImplicitScopeType::clone() const
+{
+  return std::make_unique<ImplicitScopeType>(*this);
 }
 
 MetaModelica::Value ImplicitScopeType::toMetaModelica() const

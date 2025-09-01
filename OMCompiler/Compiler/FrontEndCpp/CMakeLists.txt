@@ -14,20 +14,30 @@ add_subdirectory(Absyn)
 # Libraries
 ##################################################################################################
 set(OMC_FRONTEND_CPP_SOURCES
+    Attributes.cpp
     Class.cpp
     ClassNode.cpp
     ClassTree.cpp
+    ComplexType.cpp
     Component.cpp
     ComponentNode.cpp
+    ComponentRef.cpp
+    Connection.cpp
+    Connector.cpp
+    Dimension.cpp
+    ExpandableConnector.cpp
     Import.cpp
     Inst.cpp
     InstNode.cpp
     InstNodeType.cpp
     MetaModelica.cpp
+    NameNode.cpp
     Path.cpp
     Prefixes.cpp
     Restriction.cpp
-    SourceInfo.cpp)
+    SourceInfo.cpp
+    Subscript.cpp
+    Type.cpp)
 
 # ######################################################################################################################
 # Library: omcruntime

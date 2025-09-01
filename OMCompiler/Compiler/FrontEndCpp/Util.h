@@ -1,6 +1,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <cstdint>
 #include <iterator>
 #include <string_view>
 #include <ostream>
@@ -12,7 +13,7 @@ namespace OpenModelica
   {
     // Utility class to simplify printing a container as a delimited list.
     // Ex: std::cout << printList({1, 2, 3}, "+"); => 1+2+3
-    //     std::cout << '{' << printList({1, 2, 3}) << '}'; => {1,2,3}
+    //     std::cout << '{' << printList({1, 2, 3}) << '}'; => {1, 2, 3}
     template<typename Iterator>
     struct printList
     {
@@ -72,6 +73,19 @@ namespace OpenModelica
       res.reserve(v.size());
       for (const auto &e: v) res.emplace_back(e->clone());
       return res;
+    }
+
+    template<typename T>
+    inline void hashCombine(std::size_t &seed, const T &v)
+    {
+      // Magic numbers from boost::hash_combine.
+      const std::uint64_t m = 0xe9846af9b1a615d;
+      seed += 0x9e3779b9 + std::hash<T>{}(v);
+      seed ^= seed >> 32;
+      seed *= m;
+      seed ^= seed >> 32;
+      seed *= m;
+      seed ^= seed >> 28;
     }
   }
 }

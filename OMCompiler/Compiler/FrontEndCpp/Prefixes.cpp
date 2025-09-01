@@ -96,8 +96,9 @@ constexpr int FIELD = 1;
 extern record_description Absyn_IsField_NONFIELD__desc;
 extern record_description Absyn_IsField_FIELD__desc;
 
-Visibility::Visibility(MetaModelica::Record value) noexcept
-  : _value{value.index() == 0 ? Value::Public : Value::Protected}
+Visibility::Visibility(MetaModelica::Value value) noexcept
+  : _value{value.isRecord() ? value.toRecord().index() == 0 ? Value::Public : Value::Protected :
+                              value.toInt() == 1 ? Value::Public : Value::Protected}
 {
 }
 
@@ -129,21 +130,26 @@ bool OpenModelica::operator!= (Visibility vis1, Visibility vis2)
   return vis1.value() != vis2.value();
 }
 
-std::ostream& OpenModelica::operator<< (std::ostream &os, Visibility visibility) noexcept
+std::ostream& OpenModelica::operator<< (std::ostream &os, Visibility visibility)
 {
   os << visibility.str();
   return os;
 }
 
-Variability::Variability(MetaModelica::Record value) noexcept
+Variability::Value variability_from_mm(MetaModelica::Record value)
 {
   switch (value.index()) {
-    case VAR:      _value = Value::Continuous; break;
-    case DISCRETE: _value = Value::Discrete;   break;
-    case PARAM:    _value = Value::Parameter;  break;
-    case CONST:    _value = Value::Constant;   break;
-    default:       _value = Value::Continuous; break;
+    case DISCRETE: return Variability::Discrete; break;
+    case PARAM:    return Variability::Parameter; break;
+    case CONST:    return Variability::Constant; break;
+    default:       return Variability::Continuous; break;
   }
+}
+
+Variability::Variability(MetaModelica::Value value) noexcept
+  : _value{value.isRecord() ? variability_from_mm(value) : value.toEnum<Value>()}
+{
+
 }
 
 MetaModelica::Value Variability::toSCode() const noexcept
@@ -221,6 +227,12 @@ std::string_view Variability::unparse() const noexcept
   }
 }
 
+std::ostream& OpenModelica::operator<< (std::ostream &os, Variability variability)
+{
+  os << variability.str();
+  return os;
+}
+
 Final::Final(MetaModelica::Record value)
   : _value{value.index() == 0}
 {
@@ -242,6 +254,12 @@ std::string_view Final::str() const noexcept
 std::string_view Final::unparse() const noexcept
 {
   return _value ? "final " : "";
+}
+
+std::ostream& OpenModelica::operator<< (std::ostream &os, Final fin)
+{
+  os << fin.str();
+  return os;
 }
 
 Each::Each(MetaModelica::Record value)
@@ -267,14 +285,26 @@ std::string_view Each::unparse() const noexcept
   return _value ? "each " : "";
 }
 
-InnerOuter::InnerOuter(MetaModelica::Record value)
+std::ostream& OpenModelica::operator<< (std::ostream &os, Each each)
+{
+  os << each.str();
+  return os;
+}
+
+InnerOuter::Value inner_outer_from_mm(MetaModelica::Record value)
 {
   switch (value.index()) {
-    case INNER:       _value = Value::Inner; break;
-    case OUTER:       _value = Value::Outer; break;
-    case INNER_OUTER: _value = Value::Both;  break;
-    default:          _value = Value::None;  break;
+    case INNER:       return InnerOuter::Inner;
+    case OUTER:       return InnerOuter::Outer;
+    case INNER_OUTER: return InnerOuter::Both;
+    default:          return InnerOuter::None;
   }
+}
+
+InnerOuter::InnerOuter(MetaModelica::Value value)
+  : _value{value.isRecord() ? inner_outer_from_mm(value) : value.toEnum<Value>()}
+{
+
 }
 
 MetaModelica::Value InnerOuter::toAbsyn() const noexcept
@@ -285,16 +315,6 @@ MetaModelica::Value InnerOuter::toAbsyn() const noexcept
     case Both:  return MetaModelica::Record(INNER_OUTER, Absyn_InnerOuter_INNER__OUTER__desc);
     default:    return MetaModelica::Record(NOT_INNER_OUTER, Absyn_InnerOuter_NOT__INNER__OUTER__desc);
   }
-}
-
-bool OpenModelica::operator== (InnerOuter io1, InnerOuter io2) noexcept
-{
-  return io1._value == io2._value;
-}
-
-bool OpenModelica::operator!= (InnerOuter io1, InnerOuter io2) noexcept
-{
-  return io1._value != io2._value;
 }
 
 std::string_view InnerOuter::str() const noexcept
@@ -315,6 +335,22 @@ std::string_view InnerOuter::unparse() const noexcept
     case Value::Both:  return "inner outer ";
     default:           return "";
   }
+}
+
+bool OpenModelica::operator== (InnerOuter io1, InnerOuter io2) noexcept
+{
+  return io1._value == io2._value;
+}
+
+bool OpenModelica::operator!= (InnerOuter io1, InnerOuter io2) noexcept
+{
+  return io1._value != io2._value;
+}
+
+std::ostream& OpenModelica::operator<< (std::ostream &os, InnerOuter io)
+{
+  os << io.str();
+  return os;
 }
 
 Redeclare::Redeclare(MetaModelica::Record value)
@@ -340,6 +376,12 @@ std::string_view Redeclare::unparse() const noexcept
   return _value ? "redeclare " : "";
 }
 
+std::ostream& OpenModelica::operator<< (std::ostream &os, Redeclare redeclare)
+{
+  os << redeclare.str();
+  return os;
+}
+
 Encapsulated::Encapsulated(MetaModelica::Record value)
   : _value{value.index() == 0}
 {
@@ -363,6 +405,12 @@ std::string_view Encapsulated::unparse() const noexcept
   return _value ? "encapsulated " : "";
 }
 
+std::ostream& OpenModelica::operator<< (std::ostream &os, Encapsulated encapsulated)
+{
+  os << encapsulated.str();
+  return os;
+}
+
 Partial::Partial(MetaModelica::Record value)
   : _value{value.index() == PARTIAL}
 {
@@ -384,6 +432,12 @@ std::string_view Partial::str() const noexcept
 std::string_view Partial::unparse() const noexcept
 {
   return _value ? "partial " : "";
+}
+
+std::ostream& OpenModelica::operator<< (std::ostream &os, Partial partial)
+{
+  os << partial.str();
+  return os;
 }
 
 Purity::Value purity_from_mm(MetaModelica::Record value)
@@ -444,7 +498,13 @@ bool OpenModelica::operator< (Purity pur1, Purity pur2) noexcept
   return pur1 == Purity::Impure && pur2 != Purity::Impure;
 }
 
-ConnectorType::Value connector_from_mm(MetaModelica::Record value)
+std::ostream& OpenModelica::operator<< (std::ostream &os, Purity purity)
+{
+  os << purity.str();
+  return os;
+}
+
+ConnectorType::Value connector_from_scode(MetaModelica::Record value)
 {
   switch (value.index()) {
     case FLOW:      return ConnectorType::Flow;
@@ -453,8 +513,10 @@ ConnectorType::Value connector_from_mm(MetaModelica::Record value)
   }
 }
 
-ConnectorType::ConnectorType(MetaModelica::Record value)
-  : _value{connector_from_mm(value)}
+// Value can be either a SCode.ConnectorType record or a ConnectorType.Type bitfield.
+ConnectorType::ConnectorType(MetaModelica::Value value)
+  : _value{value.isRecord() ? static_cast<int>(connector_from_scode(value)) :
+                              static_cast<int>(value.toInt())}
 {
 
 }
@@ -585,6 +647,12 @@ std::string_view ConnectorType::unparse() const noexcept
   }
 }
 
+std::ostream& OpenModelica::operator<< (std::ostream &os, ConnectorType cty)
+{
+  os << cty.str();
+  return os;
+}
+
 Parallelism::Value parallelism_from_mm(MetaModelica::Record value)
 {
   switch (value.index()) {
@@ -594,8 +662,8 @@ Parallelism::Value parallelism_from_mm(MetaModelica::Record value)
   }
 }
 
-Parallelism::Parallelism(MetaModelica::Record value)
-  : _value{parallelism_from_mm(value)}
+Parallelism::Parallelism(MetaModelica::Value value)
+  : _value{value.isRecord() ? parallelism_from_mm(value) : value.toEnum<Value>()}
 {
 
 }
@@ -640,6 +708,12 @@ bool OpenModelica::operator!= (Parallelism par1, Parallelism par2) noexcept
   return par1.value() != par2.value();
 }
 
+std::ostream& OpenModelica::operator<< (std::ostream &os, Parallelism par)
+{
+  os << par.str();
+  return os;
+}
+
 Direction::Value direction_from_mm(MetaModelica::Record value)
 {
   switch (value.index()) {
@@ -649,8 +723,8 @@ Direction::Value direction_from_mm(MetaModelica::Record value)
   }
 }
 
-Direction::Direction(MetaModelica::Record value)
-  : _value{direction_from_mm(value)}
+Direction::Direction(MetaModelica::Value value)
+  : _value{value.isRecord() ? direction_from_mm(value) : value.toEnum<Value>()}
 {
 
 }
@@ -705,6 +779,12 @@ bool OpenModelica::operator!= (Direction dir1, Direction dir2) noexcept
   return dir1.value() != dir2.value();
 }
 
+std::ostream& OpenModelica::operator<< (std::ostream &os, Direction direction)
+{
+  os << direction.str();
+  return os;
+}
+
 Field::Field(MetaModelica::Record value)
   : _value{value.index() == FIELD}
 {
@@ -726,4 +806,10 @@ std::string_view Field::str() const noexcept
 std::string_view Field::unparse() const noexcept
 {
   return _value ? "field " : "";
+}
+
+std::ostream& OpenModelica::operator<< (std::ostream &os, Field field)
+{
+  os << field.str();
+  return os;
 }

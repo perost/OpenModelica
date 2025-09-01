@@ -2,10 +2,13 @@
 #define TYPE_H
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <optional>
 #include <memory>
-//#include "span.hpp"
+#include <iosfwd>
+
+#include "MetaModelica.h"
 
 #include "Dimension.h"
 #include "Path.h"
@@ -13,6 +16,7 @@
 namespace OpenModelica
 {
   class InstNode;
+  class ComplexType;
 
   class TypeData
   {
@@ -21,17 +25,18 @@ namespace OpenModelica
 
       virtual std::unique_ptr<TypeData> clone() const = 0;
 
-      virtual bool isScalar() const;
-      virtual bool isScalarBuiltin() const;
-      virtual bool isArray() const;
-      virtual bool isBasic() const;
-      virtual bool isNumeric() const;
-      virtual bool isConnector() const;
-      virtual bool isExpandableConnector() const;
-      virtual bool isExternalObject() const;
-      virtual bool isRecord() const;
-      virtual bool isPolymorphic() const;
-      virtual bool isPolymorphicNamed(std::string_view name) const;
+      virtual bool isScalar() const { return true; }
+      virtual bool isScalarBuiltin() const { return false; }
+      virtual bool isBasic() const { return false; }
+      virtual bool isNumeric() const { return false; }
+      virtual bool isConnector() const { return false; }
+      virtual bool isExpandableConnector() const { return false; }
+      virtual bool isExternalObject() const { return false; }
+      virtual bool isRecord() const { return false; }
+      virtual bool isPolymorphic() const { return false; }
+      virtual bool isPolymorphicNamed([[maybe_unused]] std::string_view name) const { return false; }
+
+      virtual std::string str() const = 0;
   };
 
   class Type
@@ -44,30 +49,31 @@ namespace OpenModelica
         Real,
         String,
         Boolean,
-        Enumeration,
         Clock,
         // Special types without extra data
         NoRetCall,
         Unknown,
         Any,
         // Special types with extra data
+        Enumeration,
         Tuple,
         Complex,
         Function,
         MetaBoxed,
         Polymorphic,
-        Subscripted,
-        ConditionalArray
+        ConditionalArray,
+        Untyped
       };
 
     public:
       Type(Kind kind);
+      Type(MetaModelica::Record value);
       Type(const Type &other);
-      Type(Type &&other);
+      Type(Type &&other) noexcept;
       virtual ~Type() = default;
 
       Type& operator= (Type other);
-      Type& operator= (Type &&other);
+      Type& operator= (Type &&other) noexcept;
       friend void swap(Type &first, Type &second) noexcept;
 
       bool isInteger() const;
@@ -106,6 +112,9 @@ namespace OpenModelica
       std::unique_ptr<Type> unliftArray(size_t n = 1) const;
 
       std::string typenameString() const;
+      std::string str() const;
+
+      friend std::ostream& operator<< (std::ostream &os, const Type &ty);
 
     private:
       Kind _kind;
@@ -113,12 +122,20 @@ namespace OpenModelica
       std::unique_ptr<TypeData> _data;
   };
 
-  void swap(Type &first, Type &second);
+  void swap(Type &first, Type &second) noexcept;
+
+  std::ostream& operator<< (std::ostream &os, const Type &ty);
 
   class EnumerationTypeData : public TypeData
   {
     public:
+      EnumerationTypeData(Path typePath, std::vector<std::string> literals);
+      explicit EnumerationTypeData(MetaModelica::Record value);
       std::unique_ptr<TypeData> clone() const override;
+
+      bool isBasic() const override { return true; }
+
+      std::string str() const override;
 
     private:
       Path _typePath;
@@ -128,7 +145,11 @@ namespace OpenModelica
   class TupleTypeData : public TypeData
   {
     public:
+      TupleTypeData(std::vector<Type> types, std::vector<std::string> names);
+      TupleTypeData(MetaModelica::Record value);
       std::unique_ptr<TypeData> clone() const override;
+
+      std::string str() const override;
 
     private:
       std::vector<Type> _types;
@@ -138,11 +159,20 @@ namespace OpenModelica
   class ComplexTypeData : public TypeData
   {
     public:
+      ComplexTypeData(InstNode *cls, std::unique_ptr<ComplexType> complexTy);
+      ComplexTypeData(MetaModelica::Record value);
       std::unique_ptr<TypeData> clone() const override;
+
+      bool isConnector() const override;
+      bool isExpandableConnector() const override;
+      bool isExternalObject() const override;
+      bool isRecord() const override;
+
+      std::string str() const override;
 
     private:
       InstNode* _cls;
-      // ComplexType _complexTy;
+      std::unique_ptr<ComplexType> _complexTy;
   };
 
   class FunctionTypeData : public TypeData
@@ -160,6 +190,8 @@ namespace OpenModelica
       bool isBasic() const override;
       bool isScalarBuiltin() const override;
 
+      std::string str() const override;
+
     private:
       //Function* _fn;
       Kind _kind;
@@ -168,35 +200,30 @@ namespace OpenModelica
   class PolymorphicTypeData : public TypeData
   {
     public:
+      PolymorphicTypeData(std::string name);
+      PolymorphicTypeData(MetaModelica::Record value);
       std::unique_ptr<TypeData> clone() const override;
 
       bool isPolymorphic() const override { return true; }
       bool isPolymorphicNamed(std::string_view name) const override { return _name == name; }
 
-    private:
-      std::string _name;
-  };
-
-  class SubscriptedTypeData : public TypeData
-  {
-    public:
-      std::unique_ptr<TypeData> clone() const override;
+      std::string str() const override;
 
     private:
       std::string _name;
-      Type _ty;
-      std::vector<Type> _subs;
-      Type _subscriptedTy;
   };
 
   class ConditionalArrayData : public TypeData
   {
     public:
+      ConditionalArrayData(Type trueType, Type falseType, std::optional<bool> matchedBranch);
+      ConditionalArrayData(MetaModelica::Record value);
       std::unique_ptr<TypeData> clone() const override;
 
       bool isScalar() const override { return false; }
-      bool isArray() const override { return true; }
       bool isNumeric() const override { return _trueType.isNumeric(); }
+
+      std::string str() const override;
 
     private:
       Type _trueType;

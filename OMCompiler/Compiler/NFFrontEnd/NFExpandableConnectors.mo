@@ -64,6 +64,14 @@ import Util;
 import Variable = NFVariable;
 
 public
+function elaborateExt
+  input FlatModel flatModel;
+  input Connections connections;
+  output FlatModel outFlatModel;
+  output Connections outConnections;
+  external "C" outConnections=ExpandableConnectors_elaborate_ext(flatModel, connections, outFlatModel);
+end elaborateExt;
+
 function elaborate
   input output FlatModel flatModel;
   input output Connections connections;
@@ -73,6 +81,8 @@ protected
   ConnectionSets.Sets csets;
   array<list<Connector>> csets_array;
 algorithm
+  (flatModel, connections) := elaborateExt(flatModel, connections);
+
   // Sort the connections based on whether they involve expandable connectors,
   // virtual/potentially present connectors, or only normal connectors.
   (expandable_conns, undeclared_conns, conns) := sortConnections(connections.connections);

@@ -78,6 +78,14 @@ namespace OpenModelica
         Pointer toPointer() const;
         Mutable toMutable() const;
 
+        // Converts the value to an enum value, assuming that the enum has the
+        // same enumerators as the MetaModelica one and uses default values.
+        template<typename T>
+        T toEnum() const
+        {
+          return static_cast<T>(toInt() - 1);
+        }
+
         // Converts an Option value to an std::optional<T> using T(value).
         template<typename T> std::optional<T> mapOptional() const;
         // Converts an Option value to a T using T(value) if the Option contains
@@ -498,11 +506,13 @@ namespace OpenModelica
         IndexedConstIterator find(std::string_view name) const noexcept;
         bool contains(std::string_view name) const noexcept;
         void* data() const noexcept;
+        std::size_t hash() const noexcept;
 
       private:
         void *_value;
     };
 
+    bool operator== (Record record1, Record record2) noexcept;
     std::ostream& operator<< (std::ostream &os, Record record) noexcept;
 
     class Pointer
@@ -518,6 +528,8 @@ namespace OpenModelica
         Value::ArrowProxy operator->() const noexcept;
         void update(Value value);
         void* data() const noexcept;
+
+        bool isImmutable() const noexcept;
 
       private:
         void *_ptr;
@@ -584,5 +596,15 @@ namespace OpenModelica
     }
   }
 }
+
+template<>
+struct std::hash<OpenModelica::MetaModelica::Record>
+{
+  std::size_t operator()(OpenModelica::MetaModelica::Record value) const noexcept
+  {
+    return value.hash();
+  }
+};
+
 
 #endif /* METAMODELICA_H */

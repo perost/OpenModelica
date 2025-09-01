@@ -19,6 +19,8 @@ namespace OpenModelica
   {
     public:
       //static std::unique_ptr<InstNodeType> fromAbsyn(Absyn::Element *element, InstNode *parent);
+      static std::unique_ptr<InstNodeType> fromNF(MetaModelica::Record value);
+      virtual std::unique_ptr<InstNodeType> clone() const = 0;
 
       virtual ~InstNodeType() = default;
 
@@ -49,6 +51,8 @@ namespace OpenModelica
   class NormalClassType : public InstNodeType
   {
     public:
+      std::unique_ptr<InstNodeType> clone() const override;
+
       bool isUserdefinedClass() const override { return true; }
       bool hasName() const override { return true; }
 
@@ -63,6 +67,8 @@ namespace OpenModelica
         : _parent(parent), _definition(definition)
       {
       }
+
+      std::unique_ptr<InstNodeType> clone() const override;
 
       bool isBaseClass() const override { return true; }
       bool isUserdefinedClass() const override { return true; }
@@ -89,6 +95,8 @@ namespace OpenModelica
       {
       }
 
+      std::unique_ptr<InstNodeType> clone() const override;
+
       bool isUserdefinedClass() const override { return true; }
       bool isDerivedClass() const override { return true; }
 
@@ -107,6 +115,8 @@ namespace OpenModelica
   class BuiltinClassType : public InstNodeType
   {
     public:
+      std::unique_ptr<InstNodeType> clone() const override;
+
       bool isBuiltin() const override { return true; }
       bool hasName() const override { return true; }
 
@@ -119,6 +129,8 @@ namespace OpenModelica
     public:
       TopScopeType() = default;
       TopScopeType(std::unique_ptr<InstNode> annotationScope);
+
+      std::unique_ptr<InstNodeType> clone() const override;
 
       bool isTopScope() const override { return true; }
 
@@ -141,6 +153,10 @@ namespace OpenModelica
       {
       }
 
+      RootClassType(MetaModelica::Record value);
+
+      std::unique_ptr<InstNodeType> clone() const override;
+
       bool isRootClass() const override { return true; }
       bool hasName() const override { return true; }
 
@@ -157,6 +173,8 @@ namespace OpenModelica
   class NormalComponentType : public InstNodeType
   {
     public:
+      std::unique_ptr<InstNodeType> clone() const override;
+
       MetaModelica::Value toMetaModelica() const override;
   };
 
@@ -168,6 +186,8 @@ namespace OpenModelica
         : _parent{parent}
       {
       }
+
+      std::unique_ptr<InstNodeType> clone() const override;
 
       bool isRedeclared() const override { return true; }
 
@@ -189,6 +209,8 @@ namespace OpenModelica
       {
       }
 
+      std::unique_ptr<InstNodeType> clone() const override;
+
       bool isUserdefinedClass() const override { return _ty->isUserdefinedClass(); }
       bool isRedeclared() const override { return true; }
       bool hasName() const override { return true; }
@@ -206,6 +228,8 @@ namespace OpenModelica
   class GeneratedInnerType : public InstNodeType
   {
     public:
+      std::unique_ptr<InstNodeType> clone() const override;
+
       bool isGeneratedInner() const override { return true; }
 
       MetaModelica::Value toMetaModelica() const override;
@@ -217,6 +241,8 @@ namespace OpenModelica
   class ImplicitScopeType : public InstNodeType
   {
     public:
+      std::unique_ptr<InstNodeType> clone() const override;
+
       MetaModelica::Value toMetaModelica() const override;
   };
 }
