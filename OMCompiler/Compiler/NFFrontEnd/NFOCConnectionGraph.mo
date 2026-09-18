@@ -469,7 +469,7 @@ function generateEqualityConstraintEquation
   output Equation equalityConstraintEq;
 protected
   InstContext.Type context;
-  ComponentRef fcref_rhs, fcref_lhs;
+  ComponentRef fcref_rhs;
   Expression exp_rhs, exp_lhs;
   Type ty;
   SourceInfo info = ElementSource.getInfo(source);
@@ -481,10 +481,7 @@ algorithm
   exp_rhs := Expression.CALL(Call.UNTYPED_CALL(fcref_rhs, {Expression.fromCref(lhs), Expression.fromCref(rhs)}, {}));
   (exp_rhs, ty) := Typing.typeExp(exp_rhs, context, info);
 
-  fcref_lhs := Function.lookupFunctionSimple("fill", InstNode.topScope(ComponentRef.node(lhs)), context);
-  fcref_lhs := Function.instFunctionRef(fcref_lhs, context, Absyn.dummyInfo);
-  exp_lhs := Expression.CALL(Call.UNTYPED_CALL(fcref_lhs, Expression.REAL(0.0)::list(Dimension.sizeExp(d) for d in Type.arrayDims(ty)), {}));
-  (exp_lhs, ty) := Typing.typeExp(exp_lhs, context, info);
+  exp_lhs := Expression.FILL(ty, Expression.REAL(0.0), list(Dimension.sizeExp(d) for d in Type.arrayDims(ty)));
 
   equalityConstraintEq := Equation.makeEquality(exp_rhs, exp_lhs, ty, source);
 end generateEqualityConstraintEquation;

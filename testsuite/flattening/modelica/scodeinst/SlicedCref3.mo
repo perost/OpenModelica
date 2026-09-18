@@ -24,7 +24,7 @@ end SlicedCref3;
 //   Real x[2];
 //   Real x[3];
 // algorithm
-//   r.x := {1.0, 1.0, 1.0};
+//   r.x := fill(1.0, 3);
 //   x := array(r[$i0].x for $i0 in 1:3);
 // end SlicedCref3;
 // endResult

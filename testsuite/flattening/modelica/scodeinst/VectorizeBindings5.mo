@@ -30,8 +30,8 @@ end VectorizeBindings5;
 // class VectorizeBindings5
 //   final parameter Integer N = 2;
 //   final parameter Boolean[2] initialEquation = array(true for $f1 in 1:2);
-//   final parameter Boolean[2] module.initialEquation = {true, true};
-//   final parameter Boolean[2] module.f.initialEquation = {true, true};
+//   final parameter Boolean[2] module.initialEquation = array(true for $module1 in 1:2);
+//   final parameter Boolean[2] module.f.initialEquation = array(true for $module1 in 1:2);
 //   Real[2] module.f.pOut(start = array(0.0 for $f1 in 1:2));
 // initial equation
 //   for $i1 in 1:2 loop

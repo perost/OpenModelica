@@ -25,7 +25,7 @@ end RecordBinding3;
 //   Real r.z[1];
 //   Real r.z[2];
 // equation
-//   r.x = {1.0, 1.0, 1.0, 1.0, 1.0};
+//   r.x = fill(1.0, 5);
 //   r.y = {1.0, 2.0};
 //   r.z = {3.0, 4.0};
 // end RecordBinding3;

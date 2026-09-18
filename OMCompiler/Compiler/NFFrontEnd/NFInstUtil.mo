@@ -1223,5 +1223,59 @@ public
     funcs := FunctionTree.add(funcs, fn_name, indexed_fn);
   end createExtractorModelDummyEq;
 
+  function replaceArrayConstructors
+    input output FlatModel flatModel;
+  algorithm
+    flatModel.equations := Equation.mapExpList(flatModel.equations,
+      function replaceArrayConstructor(indexPtr = Pointer.create(1)));
+    flatModel.variables := list(Variable.mapExp(var,
+      function replaceArrayConstructor(indexPtr = Pointer.create(1))) for var in flatModel.variables);
+  end replaceArrayConstructors;
+
+  function replaceArrayConstructor
+    input Expression exp;
+    input Pointer<Integer> indexPtr;
+    output Expression outExp;
+  protected
+    InstNode iter_name;
+    Expression start, body, iter_range;
+    Option<Expression> step;
+    list<tuple<InstNode, Expression>> iterators = {};
+    Call body_call;
+    Integer index;
+    Variability var;
+    Purity pur;
+  algorithm
+    outExp := match exp
+      case Expression.FILL()
+        algorithm
+          index := Pointer.access(indexPtr);
+          body := exp.exp;
+          start := Expression.INTEGER(1);
+
+          for dim in listReverse(exp.dims) loop
+            iter_name := InstNode.newIndexedIterator(index, "f");
+            iter_range := Expression.makeRange(start, NONE(), dim);
+            iterators := (iter_name, iter_range) :: iterators;
+            index := index + 1;
+          end for;
+
+          // if there are nested calls, combine them
+          (body, iterators) := match body
+            case Expression.CALL(call = body_call as Call.TYPED_ARRAY_CONSTRUCTOR())
+              then (body_call.exp, listAppend(iterators, body_call.iters));
+            else (body, iterators);
+          end match;
+
+          Pointer.update(indexPtr, index);
+          var := Expression.variability(exp);
+          pur := Expression.purity(exp);
+        then
+          Expression.CALL(Call.TYPED_ARRAY_CONSTRUCTOR(exp.ty, var, pur, body, listReverse(iterators)));
+
+      else exp;
+    end match;
+  end replaceArrayConstructor;
+
 annotation(__OpenModelica_Interface="nf_frontend");
 end NFInstUtil;

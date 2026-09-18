@@ -24,7 +24,7 @@ end FuncBuiltinOnes;
 //   Real y[4,1];
 //   Real y[4,2];
 // equation
-//   x = {1.0, 1.0, 1.0};
-//   y = {{1.0, 1.0}, {1.0, 1.0}, {1.0, 1.0}, {1.0, 1.0}};
+//   x = fill(1.0, 3);
+//   y = fill(1.0, 4, 2);
 // end FuncBuiltinOnes;
 // endResult

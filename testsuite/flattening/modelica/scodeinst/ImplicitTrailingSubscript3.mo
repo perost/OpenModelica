@@ -41,7 +41,7 @@ end ImplicitTrailingSubscript3;
 //   Real b[3,1];
 //   Real b[3,2];
 // equation
-//   a = {{1.0, 2.0}, {1.0, 2.0}, {1.0, 2.0}};
+//   a = fill({1.0, 2.0}, 3);
 //   b = initFunc(a);
 // end ImplicitTrailingSubscript3;
 // endResult

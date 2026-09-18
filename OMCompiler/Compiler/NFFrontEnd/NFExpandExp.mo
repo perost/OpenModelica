@@ -87,6 +87,7 @@ public
         then
           (exp, expanded);
 
+      case Expression.FILL()     then expandFill(exp);
       case Expression.TYPENAME() then (expandTypename(exp.ty), true);
       case Expression.RANGE()    then expandRange(exp);
       case Expression.CALL()     then expandCall(exp.call, exp, resize);
@@ -257,6 +258,27 @@ public
     end match;
   end expandCref4;
 
+  function expandFill
+    input output Expression exp;
+    output Boolean expanded;
+  protected
+    Type ty;
+    Expression fill_arg;
+    list<Expression> dims;
+  algorithm
+    Expression.FILL(ty, fill_arg, dims) := exp;
+
+    if not List.all(dims, Expression.isLiteral) then
+      expanded := false;
+    else
+      (fill_arg, expanded) := expand(fill_arg);
+
+      if expanded then
+        exp := Expression.fillArgs(fill_arg, dims);
+      end if;
+    end if;
+  end expandFill;
+
   function expandTypename
     input Type ty;
     output Expression outExp;
@@ -379,7 +401,6 @@ public
       case "cat"        then expandBuiltinCat(args, call, resize);
       case "der"        then expandBuiltinGeneric(call);
       case "diagonal"   then expandBuiltinDiagonal(listHead(args));
-      case "fill"       then expandBuiltinFill(args);
       case "pre"        then expandBuiltinGeneric(call);
       case "previous"   then expandBuiltinGeneric(call);
       case "promote"    then expandBuiltinPromote(args);
@@ -433,14 +454,6 @@ public
       outExp := Ceval.evalBuiltinDiagonal(outExp);
     end if;
   end expandBuiltinDiagonal;
-
-  function expandBuiltinFill
-    input list<Expression> args;
-    output Expression outExp;
-    output Boolean expanded = true;
-  algorithm
-    outExp := Expression.fillArgs(listHead(args), listRest(args));
-  end expandBuiltinFill;
 
   function expandBuiltinTranspose
     input Expression arg;

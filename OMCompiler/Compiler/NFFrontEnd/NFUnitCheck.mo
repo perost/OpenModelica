@@ -1034,9 +1034,7 @@ algorithm
 
     // A fill call. Will generate an array where all elements are the same, so
     // no need to evaluate it.
-    case Expression.CALL(Call.TYPED_CALL(arguments = exp :: _))
-      guard Call.isNamed(unitExp.call, "fill")
-      then getUnitStringFromExp(exp);
+    case Expression.FILL() then getUnitStringFromExp(unitExp.exp);
 
     // A non-literal expression, evaluate it and try again if it could be evaluated.
     case _

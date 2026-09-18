@@ -77,6 +77,6 @@ end EqualityConstraint2;
 //   c3.g = 0.0;
 //   c4.f = 0.0;
 //   c4.g = 0.0;
-//   Overconstrained.equalityConstraint(c2.o, c4.o) = {0.0};
+//   Overconstrained.equalityConstraint(c2.o, c4.o) = fill(0.0, 1);
 // end EqualityConstraint2;
 // endResult

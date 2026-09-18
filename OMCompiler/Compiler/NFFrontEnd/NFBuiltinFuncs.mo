@@ -417,11 +417,6 @@ constant Function ARRAY_FUNC = Function.FUNCTION(Path.IDENT("array"),
     Type.UNKNOWN(), DAE.FUNCTION_ATTRIBUTES_BUILTIN, {}, {}, listArray({}),
     Pointer.createImmutable(FunctionStatus.BUILTIN), Pointer.createImmutable(0));
 
-constant Function FILL_FUNC = Function.FUNCTION(Path.IDENT("fill"),
-  NFInstNode.NodeHandle.VALUE(InstNode.EMPTY_NODE()), {}, {}, {}, NONE(), {},
-    Type.UNKNOWN(), DAE.FUNCTION_ATTRIBUTES_BUILTIN, {}, {}, listArray({}),
-    Pointer.createImmutable(FunctionStatus.BUILTIN), Pointer.createImmutable(0));
-
 constant Function SMOOTH = Function.FUNCTION(Path.IDENT("smooth"),
   NFInstNode.NodeHandle.VALUE(InstNode.EMPTY_NODE()), {}, {}, {}, NONE(), {},
     Type.UNKNOWN(), DAE.FUNCTION_ATTRIBUTES_BUILTIN, {}, {}, listArray({}),

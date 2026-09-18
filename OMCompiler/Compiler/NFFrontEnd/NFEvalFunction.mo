@@ -62,6 +62,7 @@ import DAE;
 import ElementSource;
 import ErrorExt;
 import EvalFunctionExt = NFEvalFunctionExt;
+import ExpandExp = NFExpandExp;
 import FFI;
 import Flags;
 import Global;
@@ -979,6 +980,13 @@ algorithm
         end if;
       then
         arrayExp;
+
+    // fill must be converted to an array before it can be assigned to.
+    case (Expression.FILL(), _)
+      algorithm
+        (result, true) := ExpandExp.expandFill(arrayExp);
+      then
+        assignArrayElement(result, subscripts, value);
 
     else
       algorithm

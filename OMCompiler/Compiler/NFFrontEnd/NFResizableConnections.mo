@@ -1773,8 +1773,7 @@ protected
       case Expression.CALL(call = Call.TYPED_ARRAY_CONSTRUCTOR(exp = body, iters = iters))
         guard not List.any(iters, function iteratorOccursIn(exp = body))
         then uniformArrayElement(body);
-      case Expression.CALL() guard Call.isNamed(exp.call, "fill")
-        then uniformArrayElement(listHead(Call.arguments(exp.call)));
+      case Expression.FILL() then uniformArrayElement(exp.exp);
       case _ guard not Type.isArray(Expression.typeOf(exp)) then SOME(exp);
       else NONE();
     end match;

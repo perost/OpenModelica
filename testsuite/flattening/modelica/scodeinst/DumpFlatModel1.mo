@@ -106,7 +106,7 @@ end DumpFlatModel1;
 //   a2.y[2] = a2.x[2];
 //   a2.y[3] = a2.x[3];
 // algorithm
-//   a1.x := {1.0, 1.0, 1.0};
+//   a1.x := fill(1.0, 3);
 // end DumpFlatModel1;
 //
 // ########################################
@@ -128,7 +128,7 @@ end DumpFlatModel1;
 //   a2.y[2] = a2.x[2];
 //   a2.y[3] = a2.x[3];
 // algorithm
-//   a1.x := {1.0, 1.0, 1.0};
+//   a1.x := fill(1.0, 3);
 // end DumpFlatModel1;
 //
 // ########################################
@@ -158,7 +158,7 @@ end DumpFlatModel1;
 //   a2.y[2] = a2.x[2];
 //   a2.y[3] = a2.x[3];
 // algorithm
-//   a1.x := {1.0, 1.0, 1.0};
+//   a1.x := fill(1.0, 3);
 // end DumpFlatModel1;
 //
 // class DumpFlatModel1
@@ -184,6 +184,6 @@ end DumpFlatModel1;
 //   a2.y[2] = a2.x[2];
 //   a2.y[3] = a2.x[3];
 // algorithm
-//   a1.x := {1.0, 1.0, 1.0};
+//   a1.x := fill(1.0, 3);
 // end DumpFlatModel1;
 // endResult

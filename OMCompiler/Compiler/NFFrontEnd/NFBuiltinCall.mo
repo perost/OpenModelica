@@ -947,7 +947,7 @@ protected
     Integer index = 1;
     InstContext.Type arg_context = InstContext.set(context, NFInstContext.SUBEXPRESSION);
   algorithm
-    ty_args := {fillArg};
+    ty_args := {};
     dims := {};
 
     // Type the dimension arguments.
@@ -974,7 +974,7 @@ protected
       // Each dimension argument must be an Integer expression.
       if not Type.isInteger(arg_ty) then
         Error.addSourceMessageAndFail(Error.ARG_TYPE_MISMATCH,
-          {intString(listLength(ty_args) + 1), ComponentRef.toString(fnRef), "",
+          {intString(listLength(ty_args) + 2), ComponentRef.toString(fnRef), "",
           Expression.toString(arg), Type.toString(arg_ty), "Integer"}, info);
       end if;
 
@@ -991,8 +991,7 @@ protected
     {fn} := Function.typeRefCache(fnRef);
     ty := Type.liftArrayLeftList(fillType, dims);
 
-    callExp := Expression.CALL(
-      Call.makeTypedCall(NFBuiltinFuncs.FILL_FUNC, ty_args, variability, purity, ty));
+    callExp := Expression.FILL(ty, fillArg, ty_args);
   end typeFillCall2;
 
   function typeZerosOnesCall

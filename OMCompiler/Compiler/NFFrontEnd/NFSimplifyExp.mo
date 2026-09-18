@@ -104,8 +104,8 @@ algorithm
       then
         exp;
 
-    case Expression.RANGE()
-      then simplifyRange(exp);
+    case Expression.FILL() then simplifyFill(exp);
+    case Expression.RANGE() then simplifyRange(exp);
 
     case Expression.RECORD()
       algorithm
@@ -272,16 +272,13 @@ algorithm
 
     case "delay"            then simplifyDelay(args, call);
     case "der"              then simplifyDer(listHead(args), call);
-    case "fill"             then simplifyFill(listHead(args), listRest(args), call, expand);
     case "homotopy"         then simplifyHomotopy(args, call);
     case "max"              then simplifyMinMax(args, call, isMin = false);
     case "min"              then simplifyMinMax(args, call, isMin = true);
-    case "ones"             then simplifyFill(Expression.INTEGER(1), args, call, expand);
     case "product"          then simplifySumProduct(listHead(args), call, expand, isSum = false);
     case "sum"              then simplifySumProduct(listHead(args), call, expand, isSum = true);
     case "transpose"        then simplifyTranspose(listHead(args), call, expand);
     case "vector"           then simplifyVector(listHead(args), call);
-    case "zeros"            then simplifyFill(Expression.INTEGER(0), args, call, expand);
     case "semiLinear"       then simplifySemiLinear(args, call);
     case "$OMC$PositiveMax" then simplifyPositiveMax(args, call);
     case "$OMC$inStreamDiv" then simplifyInStreamDiv(args, call);
@@ -565,17 +562,17 @@ algorithm
 end simplifyVector;
 
 function simplifyFill
-  input Expression fillArg;
-  input list<Expression> dimArgs;
-  input Call call;
-  input Boolean expand;
-  output Expression exp;
+  input Expression fillExp;
+  output Expression outExp;
+protected
+  Type ty;
+  Expression fill_arg;
+  list<Expression> dims;
 algorithm
-  if List.all(dimArgs, Expression.isLiteral) and expand then
-    exp := Expression.fillArgs(fillArg, dimArgs);
-  else
-    exp := Expression.CALL(call);
-  end if;
+  Expression.FILL(ty, fill_arg, dims) := fillExp;
+  fill_arg := simplify(fill_arg);
+  dims := list(simplify(d) for d in dims);
+  outExp := Expression.FILL(ty, fill_arg, dims);
 end simplifyFill;
 
 function simplifyHomotopy

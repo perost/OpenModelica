@@ -22,6 +22,6 @@ end ExpandableConnector5;
 //   output Real y[2];
 // equation
 //   ec.y = y[1];
-//   y = {0.0, 0.0};
+//   y = fill(0.0, 2);
 // end ExpandableConnector5;
 // endResult

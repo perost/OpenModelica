@@ -1585,9 +1585,7 @@ public
         case Expression.ENUM_LITERAL() then exp.name;
         case Expression.CREF(cref = ComponentRef.CREF()) then ComponentRef.nodeName(exp.cref);
         case Expression.CALL(call = call as Call.TYPED_ARRAY_CONSTRUCTOR()) then getStateSelectName(call.exp);
-        case Expression.CALL(call = call as Call.TYPED_CALL(arguments = arg::_))
-          guard(AbsynUtil.pathString(Function.nameConsiderBuiltin(call.fn)) == "fill")
-        then getStateSelectName(arg);
+        case Expression.FILL() then getStateSelectName(exp.exp);
         case Expression.ARRAY() algorithm
           arg :: rest := arrayList(exp.elements);
           if not (listEmpty(rest) or List.all(rest, function Expression.isEqual(exp2=arg))) then

@@ -288,8 +288,7 @@ algorithm
     flatModel := SimplifyModel.combineBinaries(flatModel);
     execStat("combineBinaries");
     // try to replace calls with array constructors for the new backend
-    flatModel.equations := Equation.mapExpList(flatModel.equations, function Expression.wrapCall(fun = function Call.toArrayConstructor(index_ptr = Pointer.create(1))));
-    flatModel.variables := list(Variable.mapExp(var, function Expression.wrapCall(fun = function Call.toArrayConstructor(index_ptr = Pointer.create(1)))) for var in flatModel.variables);
+    flatModel := InstUtil.replaceArrayConstructors(flatModel);
     execStat("replaceArrayConstructors");
   end if;
 

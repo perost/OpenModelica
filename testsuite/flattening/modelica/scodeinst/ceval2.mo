@@ -15,6 +15,6 @@ end A;
 //   Real x[2];
 //   Real x[3];
 // equation
-//   x = {1.0, 1.0, 1.0};
+//   x = fill(1.0, 3);
 // end A;
 // endResult

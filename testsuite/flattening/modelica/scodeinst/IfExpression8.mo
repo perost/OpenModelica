@@ -20,6 +20,6 @@ end IfExpression8;
 //   Real x[3,1];
 //   Real x[3,2];
 // equation
-//   x = {{1.0, 1.0}, {1.0, 1.0}, {1.0, 1.0}};
+//   x = fill(1.0, 3, 2);
 // end IfExpression8;
 // endResult

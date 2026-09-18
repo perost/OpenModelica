@@ -1118,9 +1118,8 @@ public
           res     := Expression.fromCref(derCref);
         elseif Type.isArray(exp.ty) and not Type.hasKnownSize(exp.ty) then
           // an input of unknown size, e.g. a[:], has the zero derivative fill(0, size(a, 1), ...)
-          res     := Expression.CALL(Call.makeTypedCall(NFBuiltinFuncs.FILL_FUNC,
-            makeZero(Type.arrayElementType(exp.ty)) :: list(Expression.SIZE(exp, SOME(Expression.INTEGER(i))) for i in 1:Type.dimensionCount(exp.ty)),
-            Variability.CONTINUOUS, NFPrefixes.Purity.PURE, exp.ty));
+          res     := Expression.FILL(exp.ty, makeZero(Type.arrayElementType(exp.ty)),
+                       list(Expression.SIZE(exp, SOME(Expression.INTEGER(i))) for i in 1:Type.dimensionCount(exp.ty)));
         else
           res     := makeZero(exp.ty);
         end if;
@@ -1869,6 +1868,7 @@ public
         Expression eyeNN;
         Operator mulEW;
         Expression diagG;
+        Dimension dim;
 
       // d/dz delay(x, delta) = (dt/dz - d delta/dz) * delay(der(x), delta)
       case Expression.CALL() guard(name == "delay")
@@ -2177,34 +2177,29 @@ public
             Error.addMessage(Error.INTERNAL_ERROR,{getInstanceName() + " failed for: " + Expression.toString(exp) + "."});
           then fail();
         end match;
-      then Expression.CALL(Call.makeTypedCall(
-          fn          = NFBuiltinFuncs.FILL_FUNC,
-          args        = {Expression.INTEGER(0), arg1, arg1},
-          variability = Variability.CONSTANT,
-          purity      = NFPrefixes.Purity.PURE
-        ));
+        ty := Call.typeOf(exp.call);
+        ty := Type.liftArrayLeft(ty, listHead(Type.arrayDims(ty)));
+      then Expression.FILL(ty, Expression.INTEGER(0), {arg1, arg1});
 
       // d/dz fill(x, n1, n2, ...) = fill(dx/dz, n1, n2, ...)
-      case Expression.CALL() guard(name == "fill")
+      case Expression.FILL()
       algorithm
         // only differentiate 1st input
-        arg1 :: rest := Call.arguments(exp.call);
         if isReverse then
           rY := if Type.isArray(Expression.typeOf(exp)) then Type.dimensionCount(Expression.typeOf(exp)) else 0;
-          rX := if Type.isArray(Expression.typeOf(arg1)) then Type.dimensionCount(Expression.typeOf(arg1)) else 0;
+          rX := if Type.isArray(Expression.typeOf(exp.exp)) then Type.dimensionCount(Expression.typeOf(exp.exp)) else 0;
           current_grad := diffArguments.current_grad;
           old_grad := current_grad;
           for i in 1:max(0, rY - rX) loop // reduce over all added dimensions with sum (TODO: change to only sum over added dimensions)
             current_grad := typeSumCall(current_grad); // sum over first (or last?) dimension
           end for;
           diffArguments.current_grad := current_grad;
-          (ret1, diffArguments) := differentiateExpression(arg1, diffArguments);
+          (ret1, diffArguments) := differentiateExpression(exp.exp, diffArguments);
           diffArguments.current_grad := old_grad;
         else
-          (ret1, diffArguments) := differentiateExpression(arg1, diffArguments);
+          (ret1, diffArguments) := differentiateExpression(exp.exp, diffArguments);
         end if;
-        exp.call := Call.setArguments(exp.call, ret1 :: rest);
-      then exp;
+      then Expression.FILL(exp.ty, ret1, exp.dims);
 
       // SEMI LINEAR
       // d sL(x, m1, m2)/dz = sL(x, dm1/dz, dm2/dz) + dx/dz * (if x >= 0 then m1 else m2)

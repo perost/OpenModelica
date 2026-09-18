@@ -668,7 +668,6 @@ public
     end is_literal_iter;
   algorithm
     res := match call
-      case TYPED_CALL() then isNamed(call, "fill") and List.all(listRest(call.arguments), Expression.isLiteral);
       case TYPED_ARRAY_CONSTRUCTOR() then List.all(call.iters, is_literal_iter);
       else false;
     end match;
@@ -1438,16 +1437,6 @@ public
           cast_ty := Type.setArrayElementType(call.ty, ty);
         then
           match AbsynUtil.pathFirstIdent(Function.name(call.fn))
-            // For 'fill' we can type cast the first argument rather than the
-            // whole array that 'fill' constructs.
-            case "fill"
-              algorithm
-                call.arguments := Expression.typeCast(listHead(call.arguments), ty) ::
-                                  listRest(call.arguments);
-                call.ty := cast_ty;
-              then
-                Expression.CALL(call);
-
             // For diagonal we can type cast the argument rather than the
             // matrix that diagonal constructs.
             case "diagonal"
@@ -2358,50 +2347,6 @@ public
       InstNode.updateClass(cls, node);
     end if;
   end updateExternalRecordArgsInType;
-
-  function toArrayConstructor
-    "tries to make an array constructor from any call"
-    input Call iCall;
-    input Pointer<Integer> index_ptr;
-    output Call oCall;
-  algorithm
-    oCall := match iCall
-      local
-        InstNode iter_name;
-        Expression start, body, iter_range;
-        Option<Expression> step;
-        list<Expression> rest;
-        list<tuple<InstNode, Expression>> iterators = {};
-        Call body_call;
-        Integer index;
-
-      case TYPED_CALL() then match AbsynUtil.pathString(Function.nameConsiderBuiltin(iCall.fn))
-        case "fill" algorithm
-          index         := Pointer.access(index_ptr);
-          body :: rest  := iCall.arguments;
-          start         := Expression.INTEGER(1);
-          step          := NONE();
-          for stop in listReverse(rest) loop
-            iter_name   := InstNode.newIndexedIterator(index, "f");
-            iter_range  := Expression.makeRange(start, step, stop);
-            iterators   := (iter_name, iter_range) :: iterators;
-            index       := index + 1;
-          end for;
-
-          // if there are nested calls, combine them
-          (body, iterators) := match body
-            case Expression.CALL(call = body_call as TYPED_ARRAY_CONSTRUCTOR()) algorithm
-            then (body_call.exp, listAppend(iterators, body_call.iters));
-            else (body, iterators);
-          end match;
-
-          Pointer.update(index_ptr, index);
-        then TYPED_ARRAY_CONSTRUCTOR(iCall.ty, iCall.var, iCall.purity, body, listReverse(iterators));
-        else iCall;
-      end match;
-      else iCall;
-    end match;
-  end toArrayConstructor;
 
   function isConnectionsOperator
     input Call call;

@@ -1254,17 +1254,13 @@ algorithm
 
   if not listEmpty(dims) then
     if Expression.isLiteral(exp) or not Expression.contains(exp, Expression.isIterator) then
-      array_call := Call.makeTypedCall(NFBuiltinFuncs.FILL_FUNC,
-        exp :: list(Dimension.sizeExp(d) for d in dims),
-        Binding.variability(binding), Purity.PURE, binding_ty);
+      exp := Expression.FILL(binding_ty, exp, list(Dimension.sizeExp(d) for d in dims));
     else
       iters := listReverse((Subscript.toIterator(s), Dimension.toRange(d)) threaded for s in subs, d in dims);
 
-      array_call := Call.TYPED_ARRAY_CONSTRUCTOR(binding_ty,
-        Expression.variability(exp), Expression.purity(exp), exp, iters);
+      exp := Expression.CALL(Call.TYPED_ARRAY_CONSTRUCTOR(binding_ty,
+        Expression.variability(exp), Expression.purity(exp), exp, iters));
     end if;
-
-    exp := Expression.CALL(array_call);
   end if;
 
   binding := Binding.makeFlat(exp, Binding.variability(binding), Binding.source(binding), Binding.getInfo(binding), Binding.confidence(binding));
@@ -1293,8 +1289,7 @@ algorithm
 
         if dim_diff > 0 then
           dim_expl := list(Dimension.sizeExp(d) for d in List.firstN(Type.arrayDims(varType), dim_diff));
-          binding.bindingExp := Expression.CALL(Call.makeTypedCall(NFBuiltinFuncs.FILL_FUNC,
-            binding.bindingExp :: dim_expl, binding.variability, Purity.PURE, varType));
+          binding.bindingExp := Expression.FILL(varType, binding.bindingExp, dim_expl);
           binding.bindingType := Expression.typeOf(binding.bindingExp);
         end if;
       then
@@ -1935,8 +1930,7 @@ algorithm
     case Expression.CALL(call = Call.TYPED_ARRAY_CONSTRUCTOR(exp = body, iters = iters))
       guard not List.any(iters, function iteratorOccursIn(exp = body))
       then uniformArrayElement(body);
-    case Expression.CALL() guard Call.isNamed(exp.call, "fill")
-      then uniformArrayElement(listHead(Call.arguments(exp.call)));
+    case Expression.FILL() then uniformArrayElement(exp.exp);
     case _ guard not Type.isArray(Expression.typeOf(exp)) then exp;
   end match;
 end uniformArrayElement;
@@ -3579,6 +3573,12 @@ algorithm
         ();
 
     case Expression.ARRAY() guard Type.isRecord(Type.arrayElementType(exp.ty))
+      algorithm
+        funcs := collectTypeFuncs(Type.arrayElementType(exp.ty), funcs);
+      then
+        ();
+
+    case Expression.FILL() guard Type.isRecord(Type.arrayElementType(exp.ty))
       algorithm
         funcs := collectTypeFuncs(Type.arrayElementType(exp.ty), funcs);
       then

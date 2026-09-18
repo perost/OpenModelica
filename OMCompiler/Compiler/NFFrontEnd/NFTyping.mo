@@ -1655,12 +1655,11 @@ algorithm
     //(exp, ty, variability, purity) := typeExp(e, context, info);
     (exp, ty, variability, purity) := typeSubscriptedExp2(e, expanded_subs, context, info);
 
-    // If we have fill dimensions, use them to create a fill call.
+    // If we have fill dimensions, use them to create a fill expression.
     if not listEmpty(fill_dims) then
       fill_dims := listReverseInPlace(fill_dims);
       ty := Type.liftArrayLeftList(ty, list(Dimension.fromExp(d, Variability.CONSTANT) for d in fill_dims));
-      exp := Expression.CALL(
-        Call.makeTypedCall(NFBuiltinFuncs.FILL_FUNC, exp :: fill_dims, variability, purity, ty));
+      exp := Expression.FILL(ty, exp, fill_dims);
     end if;
 
     // If we have any subscripts after expanding the proxies we create a new

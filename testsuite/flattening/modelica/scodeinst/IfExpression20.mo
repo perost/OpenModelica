@@ -33,7 +33,7 @@ end IfExpression20;
 // Result:
 // function IfExpression20.Medium.h_TX
 //   input Real T;
-//   input Real[:] X = {0.3333333333333333, 0.3333333333333333, 0.3333333333333333};
+//   input Real[:] X = fill(0.3333333333333333, 3);
 //   output Real h;
 // algorithm
 //   h := X * X;

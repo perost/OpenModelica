@@ -42,6 +42,7 @@ protected
   import SimplifyExp = NFSimplifyExp;
   import MetaModelica.Dangerous.listReverseInPlace;
   import Array;
+  import Type = NFType;
 
 public
   import Expression = NFExpression;
@@ -64,6 +65,12 @@ public
 
   record NONE_ITERATOR
   end NONE_ITERATOR;
+
+  record FILL_ITERATOR
+    Integer index;
+    Integer size;
+    Expression exp;
+  end FILL_ITERATOR;
 
   function toString
     input ExpressionIterator iter;
@@ -97,6 +104,7 @@ public
       local
         Expression e;
         Boolean expanded;
+        Integer sz;
 
       case Expression.ARRAY()
         algorithm
@@ -108,6 +116,13 @@ public
           end if;
         then
           makeArrayIterator(e);
+
+      case Expression.FILL()
+        guard Expression.isScalar(exp.exp) and List.all(exp.dims, Expression.isLiteral)
+        algorithm
+          sz := Type.sizeOf(exp.ty);
+        then
+          if sz == 0 then NONE_ITERATOR() else FILL_ITERATOR(1, sz, exp.exp);
 
       case Expression.CREF()
         algorithm
@@ -172,6 +187,7 @@ public
       case ARRAY_ITERATOR() then isUniformArrays(iterator.arr :: iterator.arrays);
       case EACH_ITERATOR() then true;
       case NONE_ITERATOR() then true;
+      case FILL_ITERATOR() then true;
       else false;
     end match;
   end isUniform;
@@ -203,6 +219,7 @@ public
       case SCALAR_ITERATOR() then true;
       case EACH_ITERATOR() then true;
       case NONE_ITERATOR() then false;
+      case FILL_ITERATOR() then iterator.index <= iterator.size;
     end match;
   end hasNext;
 
@@ -241,6 +258,13 @@ public
         then (NONE_ITERATOR(), iterator.exp);
 
       case EACH_ITERATOR() then (iterator, iterator.exp);
+
+      case FILL_ITERATOR()
+        then (if iterator.index >= iterator.size then
+                NONE_ITERATOR()
+              else
+                FILL_ITERATOR(iterator.index + 1, iterator.size, iterator.exp),
+              iterator.exp);
     end match;
   end next;
 

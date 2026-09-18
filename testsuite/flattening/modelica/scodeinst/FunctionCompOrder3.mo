@@ -22,7 +22,7 @@ end FunctionCompOrder3;
 //   input Real x;
 //   output Real y;
 //   protected final parameter Integer n = 3;
-//   protected Real[n] z = {1.0, 1.0, 1.0};
+//   protected Real[n] z = fill(1.0, 3);
 // algorithm
 //   y := z[1];
 // end f;
